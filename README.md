@@ -22,14 +22,14 @@ Frequently Asked Questions
 **Why does `actify` require bash?**
 
 The answer is simple, I wrote `actify` in a couple of hours and did not have
-time to worry about POSIX compliance.  Rewritting `actify` for `sh` is
+time to worry about POSIX compliance.  Re-writing `actify` for `sh` is
 something I may consider in the future.
 
 **Can I get the (<environment>) prompt in shells besides bash?**
 
-Yes, but you will need to add some lines to your shell config.  See Sash Hart's
-excelent documation on this at
-[Vex Documentation](https://github.com/sashahart/vex#shell-prompts).
+Yes, but you will need to add some lines to your shell config.  See Sasha
+Hart's excellent documentation on this at [Vex
+Documentation](https://github.com/sashahart/vex#shell-prompts).
 
 **Why use `actify` instead of sourcing the activate script in the virtualenv?**
 
