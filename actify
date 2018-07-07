@@ -1,0 +1,122 @@
+#!/bin/bash
+
+# Copyright (c) 2018 Michael R. Shannon <mrshannon.aerospace@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+# OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+SCRIPT=$(basename "${BASH_SOURCE[0]}")
+
+function help {
+    echo "Usage:${SCRIPT} [OPTION] [COMMAND ...]"
+    echo ""
+    echo "Run a command in a Python venv or virtualenv."
+    echo ""
+    echo "Extra arguments will be propagated to the command."
+    echo ""
+    echo "If COMMAND is not specified the program this program is used, this"
+    echo "will usally be the user's shell.  All shells are supported, however"
+    echo "if using bash the prompt will be edited to show the environment."
+    echo ""
+    echo "The ${SCRIPT} program will look in the current directory for one of "
+    echo "the common virtualenv's  listed below.  A specific path can be given "
+    echo "with the -e option."
+    echo ""
+    echo "COMMON VIRTUALENV NAMES (in order of checking):"
+    echo "  .env"
+    echo "  .venv"
+    echo "  .virtualenv"
+    echo "  env"
+    echo "  venv"
+    echo "  virtualenv"
+    echo ""
+    echo "OPTIONAL ARGUMENTS:"
+    echo "  -h      show this help message and exit"
+    echo "  -e      specify the virtualenv path"
+    echo ""
+}
+
+
+# parse command line options
+env=""
+if [[ $# -ge 1 ]]; then
+    if [[ "$1" == '-e' || "$1" == '--environment' ]]; then
+        shift
+        if [[ $# -ge 1 ]]; then
+            env="$1"
+            if [[ ! -f $env/bin/activate ]]; then
+                echo "$env is not a virtualenv" 1>&2
+                exit 1
+            fi
+            shift
+        else
+            echo "--environment option specified but no environment given" 1>&2
+            exit 1
+        fi
+    elif [[ "$1" == '-h' || "$1" == '--help' ]]; then
+        help
+        exit 0
+    fi
+fi
+
+
+# find virtualenv if not provided in arguments
+if [[ "$env" == "" ]]; then
+    activation_paths=(.venv .env .virtualenv venv env virtualenv)
+    for activation_path in "${activation_paths[@]}"; do
+        if [[ -f "${activation_path}/bin/activate" ]]; then
+            env="$activation_path"
+            break
+        fi
+    done
+    if [[ "$env" == "" ]]; then
+        echo "No virtualenv found." 1>&2
+        exit 1
+    fi
+fi
+
+
+# get command
+if [[ $# -eq 0 ]]; then
+    cmd=$(readlink -f "/proc/$PPID/exe")
+    # fallback to bash if the parent process cannot be found
+    if [[ $? -ne 0 ]]; then
+        cmd=$(command -v bash)
+    fi
+else
+    cmd=$1
+    shift
+fi
+
+
+# verify command
+if ! command -v "$cmd" >/dev/null; then
+    echo -e "Command '$cmd' does not exist..\n" 1>&2
+    exit 1
+fi
+
+
+# activate virtualenv and run command
+if [[ "$(basename "$cmd")" == "bash" ]]; then
+    bash --rcfile <(echo "source ~/.bashrc; source \"${env}/bin/activate\"")
+else
+    source "${env}/bin/activate"
+    "$cmd" "$@"
+fi
+exit 0
