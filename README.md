@@ -42,5 +42,5 @@ same shell you called `actify` from.
 Yes, but `actify` is much simpler, it does not try manage your environments but
 simply provides a way to activate these environments and thus is easier to
 integrate into environments where others are using unmanaged virtual
-environments.  In fact, `actify` was inspired
+environments.  In fact, `actify` was inspired by
 [Vex](https://github.com/sashahart/vex) (written by Sasha Hart).
